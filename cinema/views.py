@@ -1,6 +1,5 @@
 from django.db.models import Prefetch, F, Count
 from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
 
 from cinema.models import (
     Genre,
@@ -30,21 +29,25 @@ from cinema.serializers import (
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    pagination_class = None
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    pagination_class = None
 
 
 class CinemaHallViewSet(viewsets.ModelViewSet):
     queryset = CinemaHall.objects.all()
     serializer_class = CinemaHallSerializer
+    pagination_class = None
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
+    pagination_class = None
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -79,6 +82,7 @@ class MovieViewSet(viewsets.ModelViewSet):
 class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = MovieSession.objects.all()
     serializer_class = MovieSessionSerializer
+    pagination_class = None
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -105,20 +109,13 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(show_time__date=date)
         if movie_id:
             queryset = queryset.filter(movie=int(movie_id))
-        queryset.distinct()
+        queryset = queryset.distinct()
 
         return queryset.select_related("movie", "cinema_hall")
 
 
-class OrderPagination(PageNumberPagination):
-    page_size = 5
-    page_size_query_param = "page_size"
-    max_page_size = 100
-
-
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
-    pagination_class = OrderPagination
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -142,4 +139,4 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 
 def convert_string_to_list(query: str) -> list:
-    return [int(q) for q in query.split(",")]
+    return [int(q.strip()) for q in query.split(",") if q.strip()]
